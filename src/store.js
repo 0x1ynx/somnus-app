@@ -19,7 +19,7 @@ export async function addDream({ fragments, narrative, keywords, mood, notes, in
         mood: mood || '😴',
         notes: notes || '',
         interpretation: interpretation || null,
-        date: date || new Date().toISOString().split('T')[0],
+        date: date || new Date().toLocaleDateString('en-CA'),
     };
     const { data, error } = await supabase.from('dreams').insert(dream).select().single();
     if (error) throw error;
@@ -74,7 +74,7 @@ export async function importDreams(entries) {
         mood: '😴',
         notes: '',
         interpretation: null,
-        date: entry.date || new Date().toISOString().split('T')[0],
+        date: entry.date || new Date().toLocaleDateString('en-CA'),
     }));
     const { error } = await supabase.from('dreams').insert(newDreams);
     if (error) throw error;

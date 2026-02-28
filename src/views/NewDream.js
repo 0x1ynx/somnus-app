@@ -28,7 +28,7 @@ export function renderNewDream(app) {
   // Date input
   const dateGroup = document.createElement('div');
   dateGroup.className = 'form-group';
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA');
   dateGroup.innerHTML = `
     <div class="input-label">Date</div>
     <input type="date" class="date-input" value="${today}" />
