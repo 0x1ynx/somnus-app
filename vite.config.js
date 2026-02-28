@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon-192.png', 'icon-512.png'],
+      includeAssets: ['icon-dragon-192.png', 'icon-dragon-512.png'],
       manifest: {
         name: 'Somnus · Dream Journal',
         short_name: 'Somnus',
@@ -18,17 +18,17 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'icon-192.png',
+            src: 'icon-dragon-192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: 'icon-512.png',
+            src: 'icon-dragon-512.png',
             sizes: '512x512',
             type: 'image/png',
           },
           {
-            src: 'icon-512.png',
+            src: 'icon-dragon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
