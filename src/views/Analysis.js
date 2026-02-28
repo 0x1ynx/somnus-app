@@ -17,10 +17,9 @@ export async function renderAnalysis(app) {
   `;
     page.appendChild(header);
 
-    page.appendChild(createNavBar('analysis'));
-
     app.innerHTML = '';
     app.appendChild(page);
+    app.appendChild(createNavBar('analysis'));
     requestAnimationFrame(() => page.classList.add('page-enter'));
 
     const dreams = await getDreams();

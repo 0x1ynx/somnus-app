@@ -83,10 +83,9 @@ export async function renderDreamList(app) {
     renderList(dreams);
   });
 
-  page.appendChild(createNavBar('journal'));
-
   app.innerHTML = '';
   app.appendChild(page);
+  app.appendChild(createNavBar('journal'));
   requestAnimationFrame(() => page.classList.add('page-enter'));
 
   // Load dreams

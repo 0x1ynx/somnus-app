@@ -92,10 +92,9 @@ export function renderNewDream(app) {
   form.appendChild(saveBtn);
 
   page.appendChild(form);
-  page.appendChild(createNavBar('new'));
-
   app.innerHTML = '';
   app.appendChild(page);
+  app.appendChild(createNavBar('new'));
   requestAnimationFrame(() => page.classList.add('page-enter'));
 }
 
