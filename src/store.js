@@ -1,29 +1,18 @@
-// store.js — localStorage wrapper for dream data + settings
+// store.js — Supabase for dreams, localStorage for settings
 
-const STORAGE_KEY = 'somnus_dreams';
-const API_KEY_KEY = 'somnus_deepseek_key';
+import { supabase } from './services/supabase.js';
 
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-function getAllDreams() {
-    try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
-    } catch {
-        return [];
-    }
-}
+// ---- Dreams (Supabase) ----
 
-function saveDreams(dreams) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dreams));
-}
-
-export function addDream({ fragments, narrative, keywords, mood, notes, interpretation, date }) {
-    const dreams = getAllDreams();
+export async function addDream({ fragments, narrative, keywords, mood, notes, interpretation, date }) {
+    const { data: { user } } = await supabase.auth.getUser();
     const dream = {
         id: generateId(),
+        user_id: user.id,
         fragments: fragments || '',
         narrative: narrative || '',
         keywords: keywords || [],
@@ -31,40 +20,40 @@ export function addDream({ fragments, narrative, keywords, mood, notes, interpre
         notes: notes || '',
         interpretation: interpretation || null,
         date: date || new Date().toISOString().split('T')[0],
-        createdAt: new Date().toISOString(),
     };
-    dreams.unshift(dream);
-    saveDreams(dreams);
-    return dream;
+    const { data, error } = await supabase.from('dreams').insert(dream).select().single();
+    if (error) throw error;
+    return data;
 }
 
-export function updateDream(id, updates) {
-    const dreams = getAllDreams();
-    const dream = dreams.find(d => d.id === id);
-    if (dream) {
-        Object.assign(dream, updates);
-        saveDreams(dreams);
-    }
-    return dream;
+export async function updateDream(id, updates) {
+    const { data, error } = await supabase.from('dreams').update(updates).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
 }
 
-export function getDreams() {
-    return getAllDreams();
+export async function getDreams() {
+    const { data, error } = await supabase.from('dreams').select('*').order('date', { ascending: false });
+    if (error) throw error;
+    return data || [];
 }
 
-export function getDreamById(id) {
-    return getAllDreams().find(d => d.id === id) || null;
+export async function getDreamById(id) {
+    const { data, error } = await supabase.from('dreams').select('*').eq('id', id).single();
+    if (error) return null;
+    return data;
 }
 
-export function deleteDream(id) {
-    const dreams = getAllDreams().filter(d => d.id !== id);
-    saveDreams(dreams);
+export async function deleteDream(id) {
+    const { error } = await supabase.from('dreams').delete().eq('id', id);
+    if (error) throw error;
 }
 
-export function searchDreams(query) {
-    if (!query) return getAllDreams();
+export async function searchDreams(query) {
+    if (!query) return getDreams();
     const q = query.toLowerCase();
-    return getAllDreams().filter(d =>
+    const dreams = await getDreams();
+    return dreams.filter(d =>
         d.keywords?.some(k => k.toLowerCase().includes(q)) ||
         d.fragments?.toLowerCase().includes(q) ||
         d.narrative?.toLowerCase().includes(q) ||
@@ -74,11 +63,11 @@ export function searchDreams(query) {
     );
 }
 
-// Bulk import dreams (for Apple Notes import)
-export function importDreams(entries) {
-    const dreams = getAllDreams();
+export async function importDreams(entries) {
+    const { data: { user } } = await supabase.auth.getUser();
     const newDreams = entries.map(entry => ({
         id: generateId(),
+        user_id: user.id,
         fragments: entry.fragments || '',
         narrative: '',
         keywords: [],
@@ -86,16 +75,17 @@ export function importDreams(entries) {
         notes: '',
         interpretation: null,
         date: entry.date || new Date().toISOString().split('T')[0],
-        createdAt: new Date().toISOString(),
     }));
-    const merged = [...newDreams, ...dreams];
-    // Sort by date descending
-    merged.sort((a, b) => b.date.localeCompare(a.date));
-    saveDreams(merged);
+    const { error } = await supabase.from('dreams').insert(newDreams);
+    if (error) throw error;
     return newDreams.length;
 }
 
-// API Key management
+// ---- Settings (localStorage — stays local, never synced) ----
+
+const API_KEY_KEY = 'somnus_deepseek_key';
+const CONTEXT_KEY = 'somnus_dream_context';
+
 export function getApiKey() {
     return localStorage.getItem(API_KEY_KEY) || '';
 }
@@ -103,9 +93,6 @@ export function getApiKey() {
 export function setApiKey(key) {
     localStorage.setItem(API_KEY_KEY, key);
 }
-
-// Dream context (personal dictionary for AI interpretation)
-const CONTEXT_KEY = 'somnus_dream_context';
 
 export function getDreamContext() {
     return localStorage.getItem(CONTEXT_KEY) || '';

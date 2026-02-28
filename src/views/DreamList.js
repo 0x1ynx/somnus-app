@@ -1,4 +1,4 @@
-// DreamList.js — journal list view (English)
+// DreamList.js — journal list view
 
 import { createNavBar } from '../components/NavBar.js';
 import { getDreams, searchDreams } from '../store.js';
@@ -10,7 +10,7 @@ const MONTH_NAMES = [
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function renderDreamList(app) {
+export async function renderDreamList(app) {
   const page = document.createElement('div');
   page.className = 'page page-journal';
 
@@ -49,9 +49,7 @@ export function renderDreamList(app) {
       return;
     }
 
-    // Sort all dreams by date descending
     const sorted = [...dreams].sort((a, b) => b.date.localeCompare(a.date));
-
     const groups = {};
     sorted.forEach(dream => {
       const monthKey = dream.date.substring(0, 7);
@@ -59,9 +57,7 @@ export function renderDreamList(app) {
       groups[monthKey].push(dream);
     });
 
-    // Sort month keys descending
     const sortedMonths = Object.keys(groups).sort((a, b) => b.localeCompare(a));
-
     sortedMonths.forEach(monthKey => {
       const monthDreams = groups[monthKey];
       const [year, month] = monthKey.split('-');
@@ -71,9 +67,7 @@ export function renderDreamList(app) {
       section.className = 'month-section';
       section.innerHTML = `<div class="month-label">${monthLabel}</div>`;
 
-      // Sort within month by date descending
       monthDreams.sort((a, b) => b.date.localeCompare(a.date));
-
       monthDreams.forEach((dream, index) => {
         section.appendChild(createDreamCard(dream, index));
       });
@@ -83,17 +77,21 @@ export function renderDreamList(app) {
   }
 
   const searchInput = searchBar.querySelector('.search-input');
-  searchInput.addEventListener('input', (e) => {
+  searchInput.addEventListener('input', async (e) => {
     const q = e.target.value.trim();
-    renderList(q ? searchDreams(q) : getDreams());
+    const dreams = q ? await searchDreams(q) : await getDreams();
+    renderList(dreams);
   });
 
   page.appendChild(createNavBar('journal'));
-  renderList(getDreams());
 
   app.innerHTML = '';
   app.appendChild(page);
   requestAnimationFrame(() => page.classList.add('page-enter'));
+
+  // Load dreams
+  const dreams = await getDreams();
+  renderList(dreams);
 }
 
 function createDreamCard(dream, index) {

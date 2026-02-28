@@ -205,8 +205,8 @@ export function renderSettings(app) {
       </div>
     `;
 
-    document.getElementById('confirm-import-btn')?.addEventListener('click', () => {
-      const count = importDreams(entries);
+    document.getElementById('confirm-import-btn')?.addEventListener('click', async () => {
+      const count = await importDreams(entries);
       const btn = document.getElementById('confirm-import-btn');
       btn.innerHTML = `<span class="save-icon">✨</span> Imported ${count} dreams!`;
       btn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';

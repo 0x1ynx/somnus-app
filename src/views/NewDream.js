@@ -70,7 +70,7 @@ export function renderNewDream(app) {
     const dateVal = form.querySelector('.date-input').value || today;
 
     // Save the dream first (with just fragments)
-    const dream = addDream({ fragments, mood, date: dateVal });
+    const dream = await addDream({ fragments, mood, date: dateVal });
 
     const apiKey = getApiKey();
     const dreamContext = getDreamContext();
@@ -117,7 +117,7 @@ function showStep1Loading(page) {
 }
 
 // ========== Step 1: Result (editable narrative + keywords) ==========
-function showStep1Result(page, result, dream, mood, apiKey, dreamContext) {
+async function showStep1Result(page, result, dream, mood, apiKey, dreamContext) {
   const loading = document.getElementById('step-loading');
   if (loading) loading.remove();
 
@@ -125,7 +125,7 @@ function showStep1Result(page, result, dream, mood, apiKey, dreamContext) {
   let editableKeywords = [...result.keywords];
 
   // Save reconstruction to dream
-  updateDream(dream.id, { narrative: result.narrative, keywords: editableKeywords });
+  await updateDream(dream.id, { narrative: result.narrative, keywords: editableKeywords });
 
   const el = document.createElement('div');
   el.className = 'step-result';
@@ -205,7 +205,7 @@ function showStep1Result(page, result, dream, mood, apiKey, dreamContext) {
     if (!narrative) return;
 
     // Update dream with possibly edited narrative + keywords
-    updateDream(dream.id, { narrative, keywords: editableKeywords });
+    await updateDream(dream.id, { narrative, keywords: editableKeywords });
 
     const btn = document.getElementById('interpret-btn');
     btn.disabled = true;
@@ -216,7 +216,7 @@ function showStep1Result(page, result, dream, mood, apiKey, dreamContext) {
 
     try {
       const interpretation = await interpretDream(narrative, result.keywords, mood, apiKey, dreamContext);
-      updateDream(dream.id, { interpretation });
+      await updateDream(dream.id, { interpretation });
       showStep2Result(page, interpretation, dream.id);
     } catch (err) {
       console.error('Interpretation error:', err);

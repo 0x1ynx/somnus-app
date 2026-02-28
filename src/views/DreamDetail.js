@@ -9,8 +9,16 @@ const MONTH_NAMES = [
 ];
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-export function renderDreamDetail(app, dreamId) {
-  const dream = getDreamById(dreamId);
+export async function renderDreamDetail(app, dreamId) {
+  // Show loading while fetching
+  app.innerHTML = `<div class="page" style="display:flex;align-items:center;justify-content:center;">
+    <div style="text-align:center;color:var(--text-secondary);">
+      <div style="font-size:40px;margin-bottom:12px;">🌙</div>
+      <div>Loading dream...</div>
+    </div>
+  </div>`;
+
+  const dream = await getDreamById(dreamId);
 
   const page = document.createElement('div');
   page.className = 'page page-detail';
@@ -69,10 +77,7 @@ export function renderDreamDetail(app, dreamId) {
       ` : ''}
 
       <div id="interpretation-section"></div>
-
-      ${!dream.narrative && dream.fragments ? `
-        <div id="reconstruct-section"></div>
-      ` : ''}
+      ${!dream.narrative && dream.fragments ? `<div id="reconstruct-section"></div>` : ''}
 
       <button class="delete-btn" id="delete-dream">
         <span>🗑️</span> Delete this Dream
@@ -131,24 +136,22 @@ export function renderDreamDetail(app, dreamId) {
     renderNeedsReconstruction(interpSection, dream);
   }
 
-  // Reconstruct button for imported dreams with only fragments
   const reconstructSection = page.querySelector('#reconstruct-section');
   if (reconstructSection && !dream.narrative && dream.fragments) {
     renderReconstructBtn(reconstructSection, dream, page);
   }
 
+  // Delete with confirmation
   const deleteBtn = page.querySelector('#delete-dream');
   let deleteConfirming = false;
   let deleteTimeout = null;
 
-  deleteBtn.addEventListener('click', () => {
+  deleteBtn.addEventListener('click', async () => {
     if (deleteConfirming) {
-      // Second click — actually delete
       clearTimeout(deleteTimeout);
-      deleteDream(dream.id);
+      await deleteDream(dream.id);
       window.location.hash = '#/journal';
     } else {
-      // First click — ask for confirmation
       deleteConfirming = true;
       deleteBtn.innerHTML = '<span>⚠️</span> Tap again to confirm';
       deleteBtn.classList.add('delete-confirming');
@@ -169,7 +172,6 @@ export function renderDreamDetail(app, dreamId) {
   const viewPanel = page.querySelector('#detail-view');
   const editPanel = page.querySelector('#detail-edit');
 
-  // Render editable keyword tags in edit mode
   function renderEditKeywords() {
     const container = page.querySelector('#edit-keywords-tags');
     if (!container) return;
@@ -185,21 +187,18 @@ export function renderDreamDetail(app, dreamId) {
   }
   renderEditKeywords();
 
-  // Add keyword on Enter
-  const kwAddInput = page.querySelector('#edit-keyword-add');
-  kwAddInput?.addEventListener('keydown', (e) => {
+  page.querySelector('#edit-keyword-add')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const val = kwAddInput.value.trim();
+      const val = e.target.value.trim();
       if (val && !editKeywords.includes(val)) {
         editKeywords.push(val);
         renderEditKeywords();
       }
-      kwAddInput.value = '';
+      e.target.value = '';
     }
   });
 
-  // Render mood picker in edit mode
   const moodGrid = page.querySelector('#edit-mood-grid');
   if (moodGrid) {
     moodGrid.innerHTML = moods.map(m =>
@@ -226,12 +225,12 @@ export function renderDreamDetail(app, dreamId) {
     editBtn.style.display = '';
   });
 
-  page.querySelector('#save-edit-btn')?.addEventListener('click', () => {
+  page.querySelector('#save-edit-btn')?.addEventListener('click', async () => {
     const newFragments = page.querySelector('#edit-fragments')?.value.trim() || '';
     const newNarrative = page.querySelector('#edit-narrative')?.value.trim() || dream.narrative || '';
     const newDate = page.querySelector('#edit-date')?.value || dream.date;
 
-    updateDream(dream.id, {
+    await updateDream(dream.id, {
       fragments: newFragments,
       narrative: newNarrative,
       keywords: editKeywords,
@@ -239,7 +238,6 @@ export function renderDreamDetail(app, dreamId) {
       date: newDate,
     });
 
-    // Re-render the page
     renderDreamDetail(app, dreamId);
   });
 
@@ -319,14 +317,12 @@ function renderReconstructBtn(container, dream, page) {
 
     try {
       const result = await reconstructDream(dream.fragments, dream.mood, apiKey, getDreamContext());
-      updateDream(dream.id, { narrative: result.narrative, keywords: result.keywords });
+      await updateDream(dream.id, { narrative: result.narrative, keywords: result.keywords });
 
-      // Now interpret
       btn.innerHTML = '<span class="save-icon">🔮</span> Interpreting...';
       const interpretation = await interpretDream(result.narrative, result.keywords, dream.mood, apiKey, getDreamContext());
-      updateDream(dream.id, { interpretation });
+      await updateDream(dream.id, { interpretation });
 
-      // Reload the page to show updates
       window.location.reload();
     } catch (err) {
       console.error('Error:', err);
@@ -357,14 +353,13 @@ async function requestInterpretation(container, dream) {
       apiKey,
       getDreamContext()
     );
-    updateDream(dream.id, { interpretation });
+    await updateDream(dream.id, { interpretation });
     dream.interpretation = interpretation;
     renderInterpretation(container, interpretation, dream);
   } catch (err) {
     container.innerHTML = `
       <div class="detail-interp-card detail-interp-empty">
-        <p class="detail-interp-placeholder">${err.message === 'INVALID_API_KEY' ? 'API key is invalid' : 'Could not reach the dream oracle...'
-      }</p>
+        <p class="detail-interp-placeholder">${err.message === 'INVALID_API_KEY' ? 'API key is invalid' : 'Could not reach the dream oracle...'}</p>
         <button class="detail-reinterpret-btn" id="retry-btn"><span>🔄</span> Try again</button>
       </div>
     `;

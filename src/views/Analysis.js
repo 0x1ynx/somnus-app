@@ -5,7 +5,7 @@ import { getDreams } from '../store.js';
 import { MOODS } from '../components/MoodPicker.js';
 import { createDreamGraph } from '../components/DreamGraph.js';
 
-export function renderAnalysis(app) {
+export async function renderAnalysis(app) {
     const page = document.createElement('div');
     page.className = 'page page-analysis';
 
@@ -17,7 +17,13 @@ export function renderAnalysis(app) {
   `;
     page.appendChild(header);
 
-    const dreams = getDreams();
+    page.appendChild(createNavBar('analysis'));
+
+    app.innerHTML = '';
+    app.appendChild(page);
+    requestAnimationFrame(() => page.classList.add('page-enter'));
+
+    const dreams = await getDreams();
 
     if (dreams.length === 0) {
         const empty = document.createElement('div');
@@ -28,34 +34,19 @@ export function renderAnalysis(app) {
       <div class="empty-hint">Record a few dreams to unlock insights ✨</div>
       <a href="#/new" class="empty-btn">Record a Dream</a>
     `;
-        page.appendChild(empty);
+        page.insertBefore(empty, page.querySelector('.navbar'));
     } else {
         const content = document.createElement('div');
         content.className = 'analysis-content';
 
-        // Stats overview
         createStatsOverview(dreams, content);
-
-        // Dream Graph (Obsidian-style)
         createDreamGraph(dreams, content);
-
-        // Mood Distribution
         createMoodChart(dreams, content);
-
-        // Dream Calendar Heatmap
         createCalendarHeatmap(dreams, content);
-
-        // Top Keywords
         createTopKeywords(dreams, content);
 
-        page.appendChild(content);
+        page.insertBefore(content, page.querySelector('.navbar'));
     }
-
-    page.appendChild(createNavBar('analysis'));
-
-    app.innerHTML = '';
-    app.appendChild(page);
-    requestAnimationFrame(() => page.classList.add('page-enter'));
 }
 
 function createStatsOverview(dreams, container) {
@@ -63,7 +54,6 @@ function createStatsOverview(dreams, container) {
     const totalKeywords = new Set(dreams.flatMap(d => d.keywords)).size;
     const uniqueMoods = new Set(dreams.map(d => d.mood)).size;
 
-    // Streak calculation
     const dates = [...new Set(dreams.map(d => d.date))].sort().reverse();
     let streak = 0;
     const today = new Date();
@@ -105,7 +95,6 @@ function createMoodChart(dreams, container) {
     const section = document.createElement('div');
     section.className = 'chart-section';
 
-    // Count moods
     const moodCounts = {};
     dreams.forEach(d => {
         moodCounts[d.mood] = (moodCounts[d.mood] || 0) + 1;
@@ -144,7 +133,6 @@ function createCalendarHeatmap(dreams, container) {
     const section = document.createElement('div');
     section.className = 'chart-section';
 
-    // Build date count map for last 3 months
     const dateCounts = {};
     dreams.forEach(d => {
         dateCounts[d.date] = (dateCounts[d.date] || 0) + 1;
@@ -154,7 +142,6 @@ function createCalendarHeatmap(dreams, container) {
     const weeks = [];
     let currentWeek = [];
 
-    // Go back ~90 days
     for (let i = 89; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
@@ -178,7 +165,7 @@ function createCalendarHeatmap(dreams, container) {
             let level = 0;
             if (day.count > 0) level = Math.min(Math.ceil(day.count / maxCount * 3), 3);
             const isToday = day.date === today.toISOString().split('T')[0];
-            return `<div class="heatmap-cell level-${level} ${isToday ? 'today' : ''}" 
+            return `<div class="heatmap-cell level-${level} ${isToday ? 'today' : ''}"
                 title="${day.date}: ${day.count} dream${day.count !== 1 ? 's' : ''}"></div>`;
         }).join('');
         return `<div class="heatmap-week">${weekCells}</div>`;
