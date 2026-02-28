@@ -3,55 +3,100 @@
 import { supabase } from '../services/supabase.js';
 
 export function renderLogin(app) {
-  const page = document.createElement('div');
-  page.className = 'page';
-  page.style.cssText = 'display:flex; align-items:center; justify-content:center;';
+  app.innerHTML = `
+    <div style="
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+      font-family: Inter, sans-serif;
+    ">
+      <div style="width: 100%; max-width: 320px;">
 
-  page.innerHTML = `
-    <div style="width:100%; max-width:340px; padding:40px 24px; text-align:center;">
-      <div style="font-size:64px; margin-bottom:16px;">🌙</div>
-      <h1 style="font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:400;
-                 color:#e8e0ff; margin:0 0 8px;">Somnus</h1>
-      <p style="color:rgba(255,255,255,0.5); font-size:0.9rem; margin:0 0 40px;">
-        Your dream journal
-      </p>
+        <div style="text-align: center; margin-bottom: 40px;">
+          <div style="font-size: 56px; margin-bottom: 12px;">🌙</div>
+          <h1 style="
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 400;
+            color: #e8e0ff;
+            margin: 0 0 6px;
+          ">Somnus</h1>
+          <p style="color: rgba(255,255,255,0.45); font-size: 0.875rem; margin: 0;">
+            Your dream journal
+          </p>
+        </div>
 
-      <div class="form-group" style="text-align:left;">
-        <div class="input-label" style="color:rgba(255,255,255,0.7);">Email</div>
-        <input
-          type="email"
-          id="login-email"
-          class="date-input"
-          placeholder="your@email.com"
-          style="width:100%; box-sizing:border-box; color:#fff; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.15);"
-        />
+        <div style="margin-bottom: 12px;">
+          <label style="
+            display: block;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+          ">Email</label>
+          <input
+            type="email"
+            id="login-email"
+            placeholder="your@email.com"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 12px 16px;
+              background: rgba(255,255,255,0.07);
+              border: 1px solid rgba(255,255,255,0.15);
+              border-radius: 12px;
+              color: #fff;
+              font-size: 1rem;
+              font-family: Inter, sans-serif;
+              outline: none;
+            "
+          />
+        </div>
+
+        <button id="login-btn" style="
+          width: 100%;
+          padding: 13px;
+          background: linear-gradient(135deg, #7c3aed, #a855f7);
+          border: none;
+          border-radius: 12px;
+          color: #fff;
+          font-size: 0.95rem;
+          font-family: Inter, sans-serif;
+          font-weight: 500;
+          cursor: pointer;
+          margin-top: 4px;
+        ">✨ Send Magic Link</button>
+
+        <div id="login-status" style="
+          margin-top: 16px;
+          text-align: center;
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.5);
+          min-height: 20px;
+        "></div>
+
       </div>
-
-      <button class="save-btn" id="login-btn" style="width:100%; margin-top:8px;">
-        <span class="save-icon">✨</span> Send Magic Link
-      </button>
-
-      <div id="login-status" style="margin-top:20px; font-size:0.85rem; color:rgba(255,255,255,0.6);"></div>
     </div>
   `;
 
-  app.innerHTML = '';
-  app.appendChild(page);
-
-  const emailInput = page.querySelector('#login-email');
-  const loginBtn = page.querySelector('#login-btn');
-  const status = page.querySelector('#login-status');
+  const emailInput = app.querySelector('#login-email');
+  const loginBtn = app.querySelector('#login-btn');
+  const status = app.querySelector('#login-status');
 
   loginBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     if (!email) {
-      emailInput.classList.add('shake');
-      setTimeout(() => emailInput.classList.remove('shake'), 500);
+      emailInput.style.borderColor = '#f87171';
+      setTimeout(() => emailInput.style.borderColor = 'rgba(255,255,255,0.15)', 1500);
       return;
     }
 
     loginBtn.disabled = true;
-    loginBtn.innerHTML = '<span class="save-icon">⏳</span> Sending...';
+    loginBtn.textContent = '⏳ Sending...';
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -59,12 +104,14 @@ export function renderLogin(app) {
     });
 
     if (error) {
+      status.style.color = '#f87171';
       status.textContent = '❌ ' + error.message;
       loginBtn.disabled = false;
-      loginBtn.innerHTML = '<span class="save-icon">✨</span> Send Magic Link';
+      loginBtn.textContent = '✨ Send Magic Link';
     } else {
-      loginBtn.innerHTML = '<span class="save-icon">📬</span> Link sent!';
-      status.innerHTML = `Check your inbox at <strong>${email}</strong><br>Click the link to sign in.`;
+      loginBtn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+      loginBtn.textContent = '📬 Link sent!';
+      status.textContent = `Check your inbox — click the link to sign in.`;
     }
   });
 
