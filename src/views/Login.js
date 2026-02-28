@@ -12,18 +12,18 @@ export function renderLogin(app) {
       <div style="font-size:64px; margin-bottom:16px;">🌙</div>
       <h1 style="font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:400;
                  color:#e8e0ff; margin:0 0 8px;">Somnus</h1>
-      <p style="color:var(--text-secondary); font-size:0.9rem; margin:0 0 40px;">
+      <p style="color:rgba(255,255,255,0.5); font-size:0.9rem; margin:0 0 40px;">
         Your dream journal
       </p>
 
       <div class="form-group" style="text-align:left;">
-        <div class="input-label">Email</div>
+        <div class="input-label" style="color:rgba(255,255,255,0.7);">Email</div>
         <input
           type="email"
           id="login-email"
           class="date-input"
           placeholder="your@email.com"
-          style="width:100%; box-sizing:border-box;"
+          style="width:100%; box-sizing:border-box; color:#fff; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.15);"
         />
       </div>
 
@@ -31,7 +31,7 @@ export function renderLogin(app) {
         <span class="save-icon">✨</span> Send Magic Link
       </button>
 
-      <div id="login-status" style="margin-top:20px; font-size:0.85rem; color:var(--text-secondary);"></div>
+      <div id="login-status" style="margin-top:20px; font-size:0.85rem; color:rgba(255,255,255,0.6);"></div>
     </div>
   `;
 
