@@ -142,7 +142,7 @@ function renderCodeStep(app, email) {
             margin: 0 0 8px;
           ">Check your inbox</h1>
           <p style="color: rgba(255,255,255,0.45); font-size: 0.875rem; margin: 0;">
-            We sent a 6-digit code to<br>
+            We sent a login code to<br>
             <span style="color:rgba(255,255,255,0.7);">${email}</span>
           </p>
         </div>
@@ -155,12 +155,12 @@ function renderCodeStep(app, email) {
             letter-spacing: 0.08em;
             text-transform: uppercase;
             margin-bottom: 8px;
-          ">6-digit code</label>
+          ">Login code</label>
           <input
             type="number"
             id="otp-input"
-            placeholder="123456"
-            maxlength="6"
+            placeholder="12345678"
+            maxlength="8"
             style="
               width: 100%;
               box-sizing: border-box;
@@ -223,7 +223,7 @@ function renderCodeStep(app, email) {
 
   verifyBtn.addEventListener('click', async () => {
     const token = otpInput.value.trim();
-    if (token.length !== 6) {
+    if (token.length < 4) {
       otpInput.style.borderColor = '#f87171';
       setTimeout(() => otpInput.style.borderColor = 'rgba(255,255,255,0.15)', 1500);
       return;
