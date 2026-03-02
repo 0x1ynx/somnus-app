@@ -50,7 +50,7 @@ export function renderNewDream(app) {
     <textarea
       class="dream-fragments-input"
       id="fragments-input"
-      placeholder="Write anything you remember...&#10;&#10;Keywords, phrases, sentences — all welcome.&#10;e.g. 美国大叔抓人 枪械训练 花瓣 刀 恐龙骨架"
+      placeholder="Write anything you remember...&#10;&#10;Keywords, phrases, sentences — all welcome.&#10;e.g. flying over a city, lost keys, ocean waves, childhood home"
       rows="6"
     ></textarea>
   `;

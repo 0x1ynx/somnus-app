@@ -66,7 +66,7 @@ export function renderSettings(app) {
             <textarea
               id="dream-context-input"
               class="dream-fragments-input"
-              placeholder="大叔 = 我爸&#10;阿姨 = 我妈&#10;小黑 = 我的猫&#10;学校 = 通常指高中&#10;那个人 = 前任"
+              placeholder="the tall man = my dad&#10;the lady = my mom&#10;shadow = my cat&#10;the school = usually means high school&#10;that person = my ex"
               rows="6"
             >${getDreamContext()}</textarea>
           </div>
@@ -90,14 +90,14 @@ export function renderSettings(app) {
           <div class="settings-help" style="margin-bottom: 16px;">
             <p class="help-title">Supported format:</p>
             <pre class="import-format-example">26.2.9
-美国大叔抓人
-枪械训练
-花瓣 刀
+flying over a city
+lost my keys
+ocean waves
 
 25.12.13
-阿根廷
-阴天
-三人 走廊</pre>
+childhood home
+rainy day
+three strangers in a hallway</pre>
             <p class="help-cost">📋 One date (YY.M.D) per entry, separated by blank lines</p>
           </div>
 
