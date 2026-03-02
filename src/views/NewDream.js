@@ -2,11 +2,18 @@
 
 import { createMoodPicker } from '../components/MoodPicker.js';
 import { createNavBar } from '../components/NavBar.js';
-import { addDream, getApiKey, getDreamContext, updateDream } from '../store.js';
+import { addDream, getApiKey, getDreamContext, updateDream, saveDraft, loadDraft, clearDraft } from '../store.js';
 import { reconstructDream, interpretDream } from '../services/deepseek.js';
 
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
+
 export function renderNewDream(app) {
-  let mood = '😴';
+  const draft = loadDraft();
+  let mood = draft?.mood || '😴';
+  let draftActive = true;
 
   const page = document.createElement('div');
   page.className = 'page page-new';
@@ -31,7 +38,7 @@ export function renderNewDream(app) {
   const today = new Date().toISOString().split('T')[0];
   dateGroup.innerHTML = `
     <div class="input-label">Date</div>
-    <input type="date" class="date-input" value="${today}" />
+    <input type="date" class="date-input" value="${draft?.date || today}" />
   `;
   form.appendChild(dateGroup);
 
@@ -47,11 +54,15 @@ export function renderNewDream(app) {
       rows="6"
     ></textarea>
   `;
+  if (draft?.fragments) {
+    fragmentsGroup.querySelector('#fragments-input').value = draft.fragments;
+  }
   form.appendChild(fragmentsGroup);
 
   // Mood picker
   const moodPicker = createMoodPicker(mood, (m) => {
     mood = m;
+    collectAndSaveDraft();
   });
   form.appendChild(moodPicker);
 
@@ -71,6 +82,8 @@ export function renderNewDream(app) {
 
     // Save the dream first (with just fragments)
     const dream = await addDream({ fragments, mood, date: dateVal });
+    clearDraft();
+    draftActive = false;
 
     const apiKey = getApiKey();
     const dreamContext = getDreamContext();
@@ -94,9 +107,44 @@ export function renderNewDream(app) {
   page.appendChild(form);
   page.appendChild(createNavBar('new'));
 
+  // ---- Auto-save draft ----
+  function collectAndSaveDraft() {
+    if (!draftActive) return;
+    saveDraft({
+      fragments: document.getElementById('fragments-input')?.value || '',
+      mood,
+      date: form.querySelector('.date-input')?.value || '',
+    });
+  }
+
+  const debouncedSave = debounce(collectAndSaveDraft, 500);
+
+  fragmentsGroup.querySelector('#fragments-input')
+    ?.addEventListener('input', debouncedSave);
+  dateGroup.querySelector('.date-input')
+    ?.addEventListener('change', collectAndSaveDraft);
+
+  // Save immediately when app goes to background or page closes
+  const controller = new AbortController();
+  const { signal } = controller;
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') collectAndSaveDraft();
+  }, { signal });
+  window.addEventListener('beforeunload', collectAndSaveDraft, { signal });
+
   app.innerHTML = '';
   app.appendChild(page);
   requestAnimationFrame(() => page.classList.add('page-enter'));
+
+  // Cleanup global listeners when navigating away
+  const cleanup = new MutationObserver(() => {
+    if (!document.contains(page)) {
+      controller.abort();
+      cleanup.disconnect();
+    }
+  });
+  cleanup.observe(app, { childList: true });
 }
 
 // ========== Step 1: Loading ==========

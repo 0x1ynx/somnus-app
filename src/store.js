@@ -81,6 +81,29 @@ export async function importDreams(entries) {
     return newDreams.length;
 }
 
+// ---- Draft (localStorage — auto-save in-progress dream) ----
+
+const DRAFT_KEY = 'somnus_dream_draft';
+
+export function saveDraft({ fragments, mood, date }) {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ fragments, mood, date }));
+}
+
+export function loadDraft() {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        localStorage.removeItem(DRAFT_KEY);
+        return null;
+    }
+}
+
+export function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+}
+
 // ---- Settings (localStorage — stays local, never synced) ----
 
 const API_KEY_KEY = 'somnus_deepseek_key';
